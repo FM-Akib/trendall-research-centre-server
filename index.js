@@ -10,6 +10,7 @@ const { ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
+//connect to mongodb
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@trendallteam1.xgqruui.mongodb.net/?retryWrites=true&w=majority&appName=TrendallTeam1`;
 
@@ -30,10 +31,45 @@ async function run() {
     const artefactCollection = client.db('Trendall-AllArtefactData').collection("Artefacts");
 
 
+
+    //counting how many artefact are there for pagination 
+    app.get('/artefacts-element-count', async (req, res) => {
+      try {
+          const result = await artefactCollection.find().toArray();
+          let totalCount = 0;
+  
+          // Iterate through each document in the collection
+          result.forEach(item => {
+              // Assuming each item is an object with an array field
+              Object.keys(item).forEach(key => {
+                  const value = item[key];
+                  if (Array.isArray(value)) {
+                      // Increment the totalCount by the length of the array
+                      totalCount += value.length;
+                  }
+              });
+          });
+  
+          res.send({ totalCount });
+      } catch (err) {
+          console.error("Error:", err);
+          res.status(500).send("Internal Server Error");
+      }
+  });
+  
+  
+  
+
+
+
+  //load full book without merging
     app.get('/artefacts', async (req, res) => {
         const result = await artefactCollection.find().toArray();
         res.send(result);
     });
+
+
+    //merging all chapter in an array 
     app.get('/artefacts-all', async (req, res) => {
       try {
           const result = await artefactCollection.find().toArray();
@@ -53,29 +89,9 @@ async function run() {
       }
   });
   
-  
+  // http://localhost:5000/artefacts-all
     
-  //   app.get('/artefacts-all', async (req, res) => {
-  //     try {
-  //         const pipeline = [
-  //             {
-  //                 $unwind: "$arrayFieldName" // Replace "arrayFieldName" with the actual name of the array field
-  //             },
-  //             {
-  //                 $replaceRoot: { newRoot: "$arrayFieldName" }
-  //             }
-  //         ];
-          
-  //         const result = await artefactCollection.aggregate(pipeline).toArray();
-  //         res.send(result);
-  //     } catch (err) {
-  //         console.error("Error:", err);
-  //         res.status(500).send("Internal Server Error");
-  //     }
-  // });
   
-
-
 
 
 
